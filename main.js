@@ -31,31 +31,31 @@ getFromSessionStorage();
 
 
 
-function switchTab (clickedTab) {
-    if(currentTab != clickedTab){
+function switchTab(clickedTab) {
+    if (currentTab != clickedTab) {
         currentTab.classList.remove("current-tab");
         currentTab = clickedTab;
         currentTab.classList.add("current-tab");
-    }
 
-    if(!searchForm.classList.contains("active")){
-        userInfoContainer.classList.remove("active");
-        grantAccessContainer.classList.remove("active");
-        searchForm.classList.add("active");
-    }else{
-        searchForm.classList.remove("active");
-        userInfoContainer.classList.remove("active");
+        if (!searchForm.classList.contains("active")) {
+            userInfoContainer.classList.remove("active");
+            grantAccessContainer.classList.remove("active");
+            searchForm.classList.add("active");
+        } else {
+            searchForm.classList.remove("active");
+            userInfoContainer.classList.remove("active");
 
-        getFromSessionStorage();
+            getFromSessionStorage();
+        }
     }
 }
 
 
 function getFromSessionStorage() {
     const localCoordinates = sessionStorage.getItem("user-coordinates");
-    if(!localCoordinates){
+    if (!localCoordinates) {
         grantAccessContainer.classList.add("active");
-    }else{
+    } else {
         const coordinates = JSON.parse(localCoordinates);
         fetchUserWeatherInfo(coordinates);
     }
@@ -63,21 +63,23 @@ function getFromSessionStorage() {
 
 
 async function fetchUserWeatherInfo(coordinates) {
-    const {lat, long} = coordinates;
+    const { lat, long } = coordinates;
 
     grantAccessContainer.classList.remove("active");
-    loadingScreen.classList.add("active"); 
+    loadingScreen.classList.add("active");
 
 
     try {
         const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${long}&appid=${KEY}`);
         const result = await response.json();
 
+        if(!response.ok) throw new Error();
         loadingScreen.classList.remove("active");
         userInfoContainer.classList.add("active");
         renderWeatherInfo(result);
-    }catch (error){
+    } catch (error) {
         loadingScreen.classList.remove("active");
+        showError("Server is not reachable");
         console.log("error encountered in fetchUserWeatherInfo function");
     }
 
@@ -88,29 +90,30 @@ function renderWeatherInfo(weatherInfo) {
     countryIcon.src = `https://flagcdn.com/144x108/${weatherInfo?.sys?.country.toLowerCase()}.png`;
     desc.textContent = weatherInfo?.weather?.[0]?.description;
     weatherIcon.src = `https://openweathermap.org/img/w/${weatherInfo?.weather?.[0]?.icon}.png`;
-    temp.textContent = weatherInfo?.main?.temp;
-    windSpeed.textContent = weatherInfo?.wind?.speed;
-    humidity.textContent = weatherInfo?.main?.humidity;
-    cloudiness.textContent = weatherInfo?.clouds?.all;
+    temp.textContent = `${(weatherInfo?.main?.temp - 273).toFixed(2)}\u00B0C`;
+    windSpeed.textContent = `${weatherInfo?.wind?.speed}m/s`;
+    humidity.textContent = `${weatherInfo?.main?.humidity}%`;
+    cloudiness.textContent = `${weatherInfo?.clouds?.all}%`;
 }
 
-function getLocation(){
-    if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(showPosition); 
-    }else{
-        // hw to show no geolocation support available
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition);
+    } else {
+        showError("No Access to Geolocation, Check your device!");
         console.log("No Access to GeoLocation of the user");
     }
 }
 
 function showPosition(position) {
-     const userCoords = {
-        lat : position.coords.latitude,
-        long : position.coords.longitude
-     }
+    const userCoords = {
+        lat: position.coords.latitude,
+        long: position.coords.longitude
+    }
 
-     sessionStorage.setItem("user-coordinates",JSON.stringify(userCoords)); 
-     fetchUserWeatherInfo(userCoords);
+    sessionStorage.setItem("user-coordinates", JSON.stringify(userCoords));
+    console.log("here");
+    fetchUserWeatherInfo(userCoords);
 }
 
 
@@ -119,27 +122,43 @@ async function fetchSearchWeatherInfo(city) {
     // userInfoContainer.classList.remove("active");
     // grantAccessContainer.classList.remove("active");
 
-    try{
+    try {
         const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${KEY}`);
+        searchInput.value="";
+        if(!response.ok) throw new Error("invalidInput");
+
         const result = await response.json();
 
         loadingScreen.classList.remove("active");
         userInfoContainer.classList.add("active");
         renderWeatherInfo(result);
-    }catch(error){
-        console.log("error encountered in fetchSearchWeatherInfo function");
+    } catch (error) {
+        loadingScreen.classList.remove("active");
+        if(error.message === "invalidInput")
+            showError("Invalid Input,  Enter Valid Names!");
+        else
+            showError("Server is not reachable");
     }
+}
+
+function showError (message){
+    document.querySelector(".error-text").innerText=message;
+    document.querySelector(".error-box").style.display = "flex";
+    setTimeout(closeError,1500);
+}
+function closeError (){
+    document.querySelector(".error-box").style.display = "none";
 }
 
 
 
 
-userTab.addEventListener('click',()=>{
+userTab.addEventListener('click', () => {
     // pass the clicked tab
     switchTab(userTab);
 });
 
-searchTab.addEventListener('click',()=>{
+searchTab.addEventListener('click', () => {
     //pass the clicked tab
     switchTab(searchTab);
 });
@@ -147,11 +166,11 @@ searchTab.addEventListener('click',()=>{
 
 
 
-grantButton.addEventListener("click", getLocation); 
+grantButton.addEventListener("click", getLocation);
 
-searchForm.addEventListener("submit", (event)=>{
-    event.preventDefault(); 
-    if(searchInput.value === "") return;
+searchForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (searchInput.value === "") return;
 
     fetchSearchWeatherInfo(searchInput.value.trim());
 });

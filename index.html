@@ -9,6 +9,10 @@
     <link rel="icon" type="image/png" sizes="32x32" href="108favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="108favicon/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="main.js" defer></script>
 </head>
 <body>
@@ -30,7 +34,7 @@
         <div class="weather-container">
 
             <!-- grant location container -->
-             <div class="grant-location-container">
+             <div class="grant-location-container sub-container">
 
                 <img src="./assets/location.png" width="80" height="80" loading="lazy">
                  <p>Grant Location Access</p>
@@ -50,7 +54,7 @@
               </form>
 
               <!-- loading screen container -->
-               <div class="loading-container">
+               <div class="loading-container sub-container">
 
                 <img src="./assets/loading.gif" width="150" height="150" loading="lazy">
                 <p>Loading</p>
@@ -58,7 +62,7 @@
                </div>
 
                <!-- show weather info -->
-                <div class="user-info-container">
+                <div class="user-info-container sub-container">
 
                     <!-- city name and country flag -->
                     <div class="name">
@@ -111,6 +115,11 @@
                 </div>
 
 
+        </div>
+
+        <div class="error-box">
+            <div class="icon">❌</div>
+            <p class="error-text"></p>
         </div>
 
     </div>
