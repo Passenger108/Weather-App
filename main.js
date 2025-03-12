@@ -166,7 +166,7 @@ searchTab.addEventListener('click', () => {
 
 
 
-grantButton.addEventListener("click", getLocation);
+// grantButton.addEventListener("click", getLocation);
 
 searchForm.addEventListener("submit", (event) => {
     event.preventDefault();
