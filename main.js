@@ -3,8 +3,10 @@ const searchTab = document.querySelector('[data-searchWeather]');
 const userContainer = document.querySelector('.weather-container');
 const grantAccessContainer = document.querySelector('.grant-location-container');
 const searchForm = document.querySelector('[data-searchForm]');
+const searchInput = document.querySelector('[data-searchInput]');
 const loadingScreen = document.querySelector('.loading-container');
 const userInfoContainer = document.querySelector('.user-info-container');
+const grantButton = document.querySelector('[data-grantAccess]');
 
 
 
@@ -16,6 +18,7 @@ const weatherIcon = document.querySelector("[data-weatherIcon]");
 const temp = document.querySelector("[data-temp]");
 const windSpeed = document.querySelector("[data-windSpeed]");
 const humidity = document.querySelector("[data-humidity]");
+const cloudiness = document.querySelector("[data-cloudiness]");
 
 
 
@@ -24,7 +27,7 @@ const humidity = document.querySelector("[data-humidity]");
 let currentTab = userTab;
 const KEY = "592f63ce479bc5170e3a942dc288699c";
 currentTab.classList.add("current-tab");
-
+getFromSessionStorage();
 
 
 
@@ -67,25 +70,66 @@ async function fetchUserWeatherInfo(coordinates) {
 
 
     try {
-        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${long}&appid=${KEY}
-`);
-         const result = await response.json();
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${long}&appid=${KEY}`);
+        const result = await response.json();
 
-         loadingScreen.classList.remove("active");
-         userInfoContainer.classList.add("active");
-         renderWeatherInfo(data);
+        loadingScreen.classList.remove("active");
+        userInfoContainer.classList.add("active");
+        renderWeatherInfo(result);
     }catch (error){
         loadingScreen.classList.remove("active");
-        // hw
+        console.log("error encountered in fetchUserWeatherInfo function");
     }
 
 }
 
 function renderWeatherInfo(weatherInfo) {
+    cityName.textContent = weatherInfo?.name;
+    countryIcon.src = `https://flagcdn.com/144x108/${weatherInfo?.sys?.country.toLowerCase()}.png`;
+    desc.textContent = weatherInfo?.weather?.[0]?.description;
+    weatherIcon.src = `https://openweathermap.org/img/w/${weatherInfo?.weather?.[0]?.icon}.png`;
+    temp.textContent = weatherInfo?.main?.temp;
+    windSpeed.textContent = weatherInfo?.wind?.speed;
+    humidity.textContent = weatherInfo?.main?.humidity;
+    cloudiness.textContent = weatherInfo?.clouds?.all;
+}
 
+function getLocation(){
+    if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(showPosition); 
+    }else{
+        // hw to show no geolocation support available
+        console.log("No Access to GeoLocation of the user");
+    }
+}
+
+function showPosition(position) {
+     const userCoords = {
+        lat : position.coords.latitude,
+        long : position.coords.longitude
+     }
+
+     sessionStorage.setItem("user-coordinates",JSON.stringify(userCoords)); 
+     fetchUserWeatherInfo(userCoords);
 }
 
 
+async function fetchSearchWeatherInfo(city) {
+    loadingScreen.classList.add("active");
+    // userInfoContainer.classList.remove("active");
+    // grantAccessContainer.classList.remove("active");
+
+    try{
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${KEY}`);
+        const result = await response.json();
+
+        loadingScreen.classList.remove("active");
+        userInfoContainer.classList.add("active");
+        renderWeatherInfo(result);
+    }catch(error){
+        console.log("error encountered in fetchSearchWeatherInfo function");
+    }
+}
 
 
 
@@ -102,3 +146,12 @@ searchTab.addEventListener('click',()=>{
 
 
 
+
+grantButton.addEventListener("click", getLocation); 
+
+searchForm.addEventListener("submit", (event)=>{
+    event.preventDefault(); 
+    if(searchInput.value === "") return;
+
+    fetchSearchWeatherInfo(searchInput.value.trim());
+});
